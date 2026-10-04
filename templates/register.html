@@ -1,20 +1,87 @@
 {% extends "base.html" %}
+
 {% block title %}Register{% endblock %}
+
 {% block content %}
-<div class="form-card">
-    <h1>Create Account</h1>
-    <p class="muted">Your password will be hashed before storage.</p>
-    <form method="post" autocomplete="off">
-        <label>Username
-            <input name="username" maxlength="100" required>
-        </label>
-        <label>Email
-            <input type="email" name="email" maxlength="150" required>
-        </label>
-        <label>Password
-            <input type="password" name="password" minlength="8" required>
-        </label>
-        <button class="button" type="submit">Register</button>
-    </form>
-</div>
+<section class="auth-page">
+    <div class="auth-card register-card">
+        <div class="auth-icon">🛡️</div>
+
+        <div class="auth-heading">
+            <span class="auth-badge">SECURE REGISTRATION</span>
+            <h1>Create Account</h1>
+            <p>Create your account with secure password protection.</p>
+        </div>
+
+        <form method="post" autocomplete="off" class="auth-form">
+
+            <div class="input-group">
+                <label for="username">Username</label>
+                <div class="input-wrap">
+                    <span>👤</span>
+                    <input
+                        id="username"
+                        name="username"
+                        maxlength="100"
+                        placeholder="Choose a username"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="email">Email Address</label>
+                <div class="input-wrap">
+                    <span>✉️</span>
+                    <input
+                        id="email"
+                        type="email"
+                        name="email"
+                        maxlength="150"
+                        placeholder="Enter your email"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <span>🔑</span>
+                    <input
+                        id="password"
+                        type="password"
+                        name="password"
+                        minlength="8"
+                        placeholder="Minimum 8 characters"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="password-note">
+                <span>✓</span>
+                Your password will be hashed before storage.
+            </div>
+
+            <button class="auth-button" type="submit">
+                <span>Create Account</span>
+                <b>→</b>
+            </button>
+        </form>
+
+        <div class="auth-security">
+            <span>🔒</span>
+            <div>
+                <strong>Your data stays protected</strong>
+                <small>Password hashes are stored instead of plain-text passwords.</small>
+            </div>
+        </div>
+
+        <p class="auth-bottom">
+            Already have an account?
+            <a href="{{ url_for('login') }}">Login</a>
+        </p>
+    </div>
+</section>
 {% endblock %}

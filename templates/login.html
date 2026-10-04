@@ -1,16 +1,65 @@
 {% extends "base.html" %}
+
 {% block title %}Login{% endblock %}
+
 {% block content %}
-<div class="form-card">
-    <h1>Secure Login</h1>
-    <form method="post" autocomplete="off">
-        <label>Username
-            <input name="username" maxlength="100" required>
-        </label>
-        <label>Password
-            <input type="password" name="password" required>
-        </label>
-        <button class="button" type="submit">Login</button>
-    </form>
-</div>
+<section class="auth-page">
+    <div class="auth-card">
+        <div class="auth-icon">🔐</div>
+
+        <div class="auth-heading">
+            <span class="auth-badge">SECURE ACCESS</span>
+            <h1>Welcome Back</h1>
+            <p>Sign in securely to access your CodeAlpha Security dashboard.</p>
+        </div>
+
+        <form method="post" autocomplete="off" class="auth-form">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <div class="input-wrap">
+                    <span>👤</span>
+                    <input
+                        id="username"
+                        name="username"
+                        maxlength="100"
+                        placeholder="Enter your username"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <div class="input-wrap">
+                    <span>🔑</span>
+                    <input
+                        id="password"
+                        type="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required
+                    >
+                </div>
+            </div>
+
+            <button class="auth-button" type="submit">
+                <span>Login Securely</span>
+                <b>→</b>
+            </button>
+        </form>
+
+        <div class="auth-security">
+            <span>🛡️</span>
+            <div>
+                <strong>Protected Authentication</strong>
+                <small>Parameterized queries & secure password hashing</small>
+            </div>
+        </div>
+
+        <p class="auth-bottom">
+            Don't have an account?
+            <a href="{{ url_for('register') }}">Create Account</a>
+        </p>
+    </div>
+</section>
 {% endblock %}
