@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Home - CodeAlpha Security{% endblock %}
+{% block content %}
+<section class="hero">
+    <span class="badge">Cybersecurity Project</span>
+    <h1>SQL Injection & Data Leak Prevention</h1>
+    <p>Secure authentication built with Flask, MySQL, parameterized queries and password hashing.</p>
+    <div class="actions">
+        <a class="button" href="{{ url_for('register') }}">Create Account</a>
+        <a class="button secondary" href="{{ url_for('security_demo') }}">View Security Demo</a>
+    </div>
+</section>
+
+<section class="grid">
+    <article class="card"><h3>Parameterized SQL</h3><p>User input is passed as query parameters instead of being concatenated into SQL.</p></article>
+    <article class="card"><h3>Password Hashing</h3><p>Passwords are stored as hashes, not plaintext values.</p></article>
+    <article class="card"><h3>Safe Errors</h3><p>Database details are logged internally rather than exposed to users.</p></article>
+</section>
+{% endblock %}
