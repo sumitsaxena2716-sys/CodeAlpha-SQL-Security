@@ -1,21 +1,14 @@
-# Virtual environment
 venv/
 .venv/
-
-# Environment variables / secrets
 .env
 .env.*
-
-# Python cache
 __pycache__/
 *.py[cod]
-
-# Logs
 logs/*.log
-
-# IDE
+.git/
 .vscode/
-
-# OS files
 .DS_Store
 Thumbs.db
+
+# Project archive
+CodeAlpha_SQL_Security_Task2_Final.zip

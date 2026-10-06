@@ -1,65 +1,11 @@
-{% extends "base.html" %}
-
-{% block title %}Login{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}Sign In · CipherShield{% endblock %}
 {% block content %}
-<section class="auth-page">
-    <div class="auth-card">
-        <div class="auth-icon">🔐</div>
-
-        <div class="auth-heading">
-            <span class="auth-badge">SECURE ACCESS</span>
-            <h1>Welcome Back</h1>
-            <p>Sign in securely to access your CodeAlpha Security dashboard.</p>
-        </div>
-
-        <form method="post" autocomplete="off" class="auth-form">
-            <div class="input-group">
-                <label for="username">Username</label>
-                <div class="input-wrap">
-                    <span>👤</span>
-                    <input
-                        id="username"
-                        name="username"
-                        maxlength="100"
-                        placeholder="Enter your username"
-                        required
-                    >
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="password">Password</label>
-                <div class="input-wrap">
-                    <span>🔑</span>
-                    <input
-                        id="password"
-                        type="password"
-                        name="password"
-                        placeholder="Enter your password"
-                        required
-                    >
-                </div>
-            </div>
-
-            <button class="auth-button" type="submit">
-                <span>Login Securely</span>
-                <b>→</b>
-            </button>
-        </form>
-
-        <div class="auth-security">
-            <span>🛡️</span>
-            <div>
-                <strong>Protected Authentication</strong>
-                <small>Parameterized queries & secure password hashing</small>
-            </div>
-        </div>
-
-        <p class="auth-bottom">
-            Don't have an account?
-            <a href="{{ url_for('register') }}">Create Account</a>
-        </p>
-    </div>
-</section>
+<section class="auth-page"><div class="auth-card"><div class="auth-badge">◈ SECURE ACCESS</div><h1>Welcome back</h1><p class="muted">Sign in to open your protected security workspace.</p>
+<form method="post" class="auth-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label>Username<div class="input-wrap"><span>⌁</span><input name="username" autocomplete="username" required placeholder="e.g. sumit_test"></div></label>
+<label>Password<div class="input-wrap"><span>◉</span><input type="password" name="password" autocomplete="current-password" required placeholder="Your password"></div></label>
+<button class="btn primary full" type="submit">Secure sign in <span>→</span></button></form>
+<div class="security-note"><span>✓</span><div><b>Protected authentication</b><small>Passwords are verified against secure hashes. Failed attempts are throttled.</small></div></div>
+<p class="auth-bottom">Don't have an account? <a href="{{ url_for('register') }}">Create one</a></p></div></section>
 {% endblock %}

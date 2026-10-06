@@ -1,87 +1,12 @@
-{% extends "base.html" %}
-
-{% block title %}Register{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}Create Account · CipherShield{% endblock %}
 {% block content %}
-<section class="auth-page">
-    <div class="auth-card register-card">
-        <div class="auth-icon">🛡️</div>
-
-        <div class="auth-heading">
-            <span class="auth-badge">SECURE REGISTRATION</span>
-            <h1>Create Account</h1>
-            <p>Create your account with secure password protection.</p>
-        </div>
-
-        <form method="post" autocomplete="off" class="auth-form">
-
-            <div class="input-group">
-                <label for="username">Username</label>
-                <div class="input-wrap">
-                    <span>👤</span>
-                    <input
-                        id="username"
-                        name="username"
-                        maxlength="100"
-                        placeholder="Choose a username"
-                        required
-                    >
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="email">Email Address</label>
-                <div class="input-wrap">
-                    <span>✉️</span>
-                    <input
-                        id="email"
-                        type="email"
-                        name="email"
-                        maxlength="150"
-                        placeholder="Enter your email"
-                        required
-                    >
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label for="password">Password</label>
-                <div class="input-wrap">
-                    <span>🔑</span>
-                    <input
-                        id="password"
-                        type="password"
-                        name="password"
-                        minlength="8"
-                        placeholder="Minimum 8 characters"
-                        required
-                    >
-                </div>
-            </div>
-
-            <div class="password-note">
-                <span>✓</span>
-                Your password will be hashed before storage.
-            </div>
-
-            <button class="auth-button" type="submit">
-                <span>Create Account</span>
-                <b>→</b>
-            </button>
-        </form>
-
-        <div class="auth-security">
-            <span>🔒</span>
-            <div>
-                <strong>Your data stays protected</strong>
-                <small>Password hashes are stored instead of plain-text passwords.</small>
-            </div>
-        </div>
-
-        <p class="auth-bottom">
-            Already have an account?
-            <a href="{{ url_for('login') }}">Login</a>
-        </p>
-    </div>
-</section>
+<section class="auth-page"><div class="auth-card wide"><div class="auth-badge">✦ AES-256 ENABLED</div><h1>Create your secure account</h1><p class="muted">Your password is hashed. Optional sensitive profile fields are encrypted before storage.</p>
+<form method="post" class="auth-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="two-col"><label>Username<div class="input-wrap"><span>⌁</span><input name="username" required minlength="3" maxlength="50" placeholder="Choose a username"></div></label><label>Email<div class="input-wrap"><span>@</span><input type="email" name="email" required maxlength="150" placeholder="you@example.com"></div></label></div>
+<div class="two-col"><label>Password<div class="input-wrap"><span>◉</span><input type="password" name="password" required minlength="8" placeholder="Minimum 8 characters"></div></label><label>Phone <small>(optional)</small><div class="input-wrap"><span>+</span><input name="phone" maxlength="20" placeholder="Encrypted at rest"></div></label></div>
+<label>Private security note <small>(optional)</small><div class="input-wrap"><span>◆</span><input name="security_note" maxlength="500" placeholder="This field is AES-256 encrypted"></div></label>
+<button class="btn primary full" type="submit">Create protected account <span>→</span></button></form>
+<div class="security-note"><span>✓</span><div><b>Two-layer protection</b><small>SQL parameters protect database operations while AES-256-GCM protects sensitive profile data at rest.</small></div></div>
+<p class="auth-bottom">Already registered? <a href="{{ url_for('login') }}">Sign in</a></p></div></section>
 {% endblock %}

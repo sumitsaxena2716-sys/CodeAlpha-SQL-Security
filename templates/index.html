@@ -1,42 +1,41 @@
-{% extends "base.html" %}
-{% block title %}CodeAlpha Security | SQL Injection Protection{% endblock %}
+{% extends 'base.html' %}
+{% block title %}CipherShield · Secure Data Platform{% endblock %}
 {% block content %}
 <section class="hero">
-<div class="hero-grid"></div><div class="hero-glow glow-one"></div><div class="hero-glow glow-two"></div>
-<div class="hero-inner">
-<div class="hero-copy">
-<div class="eyebrow">🛡 Cybersecurity Project</div>
-<h1>SQL Injection &amp;<br><span>Data Leak Prevention</span></h1>
-<p class="hero-text">A secure authentication system built with Flask, MySQL, parameterized queries and password hashing to prevent SQL injection attacks and protect sensitive user data.</p>
-<div class="hero-actions">
-<a class="btn btn-primary" href="{{ url_for('register') }}">♙ <span>Create Account</span> <b>→</b></a>
-<a class="btn btn-outline" href="{{ url_for('security_demo') }}">🛡 <span>View Security Demo</span> <b>→</b></a>
-</div>
-<div class="stats">
-<div class="stat"><strong>100%</strong><small>SQL Injection Protection</small></div>
-<div class="stat"><strong>Secure</strong><small>Password Hashing</small></div>
-<div class="stat"><strong>MySQL</strong><small>Secure Database</small></div>
-</div></div>
-<div class="hero-visual">
-<div class="code-device">
-<div class="screen-top"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="screen-title">secure_auth.py</span></div>
-<div class="code-panels">
-<div class="code-panel unsafe"><div class="panel-label">✕ Unsafe Query</div><pre>query = "SELECT * FROM
-users WHERE username = '"
-+ username + "'"</pre></div>
-<div class="code-panel safe"><div class="panel-label">✓ Secure Query</div><pre>cursor.execute(
- "SELECT * FROM users
- WHERE username = %s",
- (username,)
-)</pre></div>
-</div></div>
-<div class="floating-checks"><div>✓ Secure Authentication</div><div>✓ Password Hashing</div><div>✓ Parameterized Queries</div><div>✓ Data Leak Prevention</div></div>
-<div class="shield">🔒</div><div class="database-stack"><i></i><i></i><i></i></div>
-</div></div></section>
-<section class="features">
-<article class="feature-card blue-card"><div class="feature-icon">✓</div><h3>Parameterized SQL</h3><p>User input is passed as query parameters instead of being concatenated into SQL.</p><div class="accent blue"></div></article>
-<article class="feature-card green-card"><div class="feature-icon">🔒</div><h3>Password Hashing</h3><p>Passwords are stored using secure hashing instead of plaintext values.</p><div class="accent green"></div></article>
-<article class="feature-card orange-card"><div class="feature-icon">▤</div><h3>Safe Errors</h3><p>Database details are logged internally rather than exposed to users.</p><div class="accent orange"></div></article>
-<article class="feature-card purple-card"><div class="feature-icon">☷</div><h3>Security Logging</h3><p>Suspicious activities and failed login attempts are logged on the server-side.</p><div class="accent purple"></div></article>
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="pulse"></span> CODEALPHA · CLOUD SECURITY TASK 2</div>
+    <h1>Protect data before<br><span>attackers reach it.</span></h1>
+    <p class="hero-text">A production-style Flask security platform demonstrating parameterized SQL, AES-256-GCM encryption, secure authentication and layered server protection.</p>
+    <div class="hero-actions">
+      {% if session.get('user_id') %}
+        <a class="btn primary" href="{{ url_for('dashboard') }}">Open security dashboard <span>→</span></a>
+      {% else %}
+        <a class="btn primary" href="{{ url_for('register') }}">Create secure account <span>→</span></a>
+        <a class="btn ghost" href="{{ url_for('security_demo') }}">Explore security lab</a>
+      {% endif %}
+    </div>
+    <div class="trust-row"><span>✓ Parameterized SQL</span><span>✓ AES-256-GCM</span><span>✓ CSRF protection</span><span>✓ Secure headers</span></div>
+  </div>
+  <div class="hero-visual">
+    <div class="shield-orbit orbit-a"></div><div class="shield-orbit orbit-b"></div>
+    <div class="shield-core"><div class="shield-icon">◇</div><div class="shield-label">SECURE</div><small>DATA GATEWAY</small></div>
+    <div class="float-card fc-one"><span class="mini-dot green"></span><div><b>SQL Guard</b><small>Parameterized queries</small></div></div>
+    <div class="float-card fc-two"><span class="mini-dot blue"></span><div><b>AES-256</b><small>Encrypted profile data</small></div></div>
+  </div>
+</section>
+
+<section class="section section-dark">
+  <div class="section-head"><div><span class="eyebrow">DEFENSE LAYERS</span><h2>Security built into every request.</h2></div><p>Designed around the requirements of CodeAlpha's SQL Injection data-leak prevention task.</p></div>
+  <div class="feature-grid">
+    <article class="feature-card"><div class="feature-icon">⌁</div><h3>SQL Injection Defense</h3><p>All database input is passed as parameters instead of being concatenated into SQL strings.</p><span class="tag">LAYER 01</span></article>
+    <article class="feature-card"><div class="feature-icon">✦</div><h3>AES-256 Encryption</h3><p>Sensitive profile fields are encrypted using AES-256-GCM with a secret key stored outside source code.</p><span class="tag">LAYER 02</span></article>
+    <article class="feature-card"><div class="feature-icon">◎</div><h3>Access Protection</h3><p>Password hashing, CSRF tokens, login throttling and security headers protect the application layer.</p><span class="tag">LAYER 03</span></article>
+  </div>
+</section>
+
+<section class="architecture section">
+  <div class="section-head"><div><span class="eyebrow">CLOUD-READY ARCHITECTURE</span><h2>Local development → internet-ready deployment.</h2></div></div>
+  <div class="flow"><div class="flow-box">USER<br><small>Browser</small></div><div class="flow-line">→</div><div class="flow-box accent">FLASK<br><small>Security Gateway</small></div><div class="flow-line">→</div><div class="flow-box">AWS EC2<br><small>App Server</small></div><div class="flow-line">→</div><div class="flow-box">AWS RDS<br><small>MySQL</small></div></div>
+  <p class="architecture-note">The included deployment guide configures the same application for AWS EC2 + RDS so it can be exposed through a public HTTPS endpoint.</p>
 </section>
 {% endblock %}

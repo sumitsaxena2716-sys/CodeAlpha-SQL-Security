@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Encrypted Profile · CipherShield{% endblock %}
+{% block content %}
+<section class="auth-page"><div class="auth-card wide"><div class="auth-badge">✦ ENCRYPTED AT REST</div><h1>Protected profile</h1><p class="muted">These sensitive fields are encrypted with AES-256-GCM before reaching MySQL.</p>
+<form method="post" class="auth-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label>Phone<div class="input-wrap"><span>+</span><input name="phone" value="{{ user.phone }}" maxlength="20" placeholder="Your phone number"></div></label>
+<label>Private security note<div class="input-wrap"><span>◆</span><input name="security_note" value="{{ user.security_note }}" maxlength="500" placeholder="A private note"></div></label>
+<button class="btn primary full" type="submit">Encrypt & save <span>→</span></button></form>
+<div class="security-note"><span>🔐</span><div><b>AES-256-GCM</b><small>Encryption key stays in the environment and is never committed to GitHub.</small></div></div></div></section>
+{% endblock %}

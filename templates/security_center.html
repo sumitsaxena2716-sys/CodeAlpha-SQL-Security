@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}Security Center · CipherShield{% endblock %}
+{% block content %}
+<section class="dashboard-page section"><div class="dash-top"><div><span class="eyebrow">SECURITY CENTER</span><h1>Recent security events</h1><p class="muted">Operational visibility for authentication and security controls.</p></div></div>
+<div class="panel"><div class="table-wrap"><table><thead><tr><th>Time</th><th>Event</th><th>Username</th><th>Status</th></tr></thead><tbody>{% for event in events %}<tr><td>{{ event.event_time }}</td><td>{{ event.event_type }}</td><td>{{ event.username or '—' }}</td><td><span class="status-pill">{{ event.status }}</span></td></tr>{% else %}<tr><td colspan="4" class="empty">No events recorded yet.</td></tr>{% endfor %}</tbody></table></div></div></section>
+{% endblock %}

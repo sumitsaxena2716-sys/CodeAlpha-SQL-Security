@@ -1,136 +1,14 @@
-{% extends "base.html" %}
-
-{% block title %}SQL Injection Demo{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}Security Lab · CipherShield{% endblock %}
 {% block content %}
-
-<section class="demo-hero">
-    <div class="demo-hero-grid"></div>
-
-    <div class="demo-hero-content">
-        <span class="demo-badge">🔬 EDUCATIONAL SECURITY DEMO</span>
-
-        <h1>
-            SQL Injection
-            <span>Prevention</span>
-        </h1>
-
-        <p>
-            Understand how unsafe SQL queries can expose applications
-            and how parameterized queries protect your database.
-        </p>
-    </div>
-</section>
-
-<section class="security-demo-container">
-
-    <div class="demo-intro">
-        <div>
-            <span class="section-label">QUERY SECURITY</span>
-            <h2>Unsafe vs Secure SQL</h2>
-            <p>
-                The project demonstrates the difference between directly
-                concatenating user input and using parameterized queries.
-            </p>
-        </div>
-    </div>
-
-    <div class="code-comparison">
-
-        <div class="security-code-card unsafe-card">
-            <div class="code-card-header">
-                <div class="code-status danger-status">
-                    <span>✕</span>
-                    UNSAFE PATTERN
-                </div>
-                <span class="risk-label">HIGH RISK</span>
-            </div>
-
-            <h3>String Concatenation</h3>
-
-            <pre><code>query = "SELECT * FROM users WHERE username = '" + username + "'"</code></pre>
-
-            <div class="code-explanation">
-                <strong>⚠️ Why is this dangerous?</strong>
-                <p>
-                    Concatenating untrusted input into SQL can change
-                    the intended query structure.
-                </p>
-            </div>
-        </div>
-
-        <div class="security-code-card safe-card">
-            <div class="code-card-header">
-                <div class="code-status safe-status">
-                    <span>✓</span>
-                    SECURE PATTERN
-                </div>
-                <span class="safe-label">PROTECTED</span>
-            </div>
-
-            <h3>Parameterized Query</h3>
-
-            <pre><code>cursor.execute(
-    "SELECT id, username, password_hash FROM users WHERE username = %s",
-    (username,)
-)</code></pre>
-
-            <div class="code-explanation">
-                <strong>🛡️ Why is this secure?</strong>
-                <p>
-                    The database driver treats the supplied value as
-                    data rather than SQL syntax.
-                </p>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="protection-card">
-        <div class="protection-icon">🛡️</div>
-
-        <div class="protection-content">
-            <span class="section-label">DATA LEAK PREVENTION</span>
-            <h2>Security Measures Used in This Project</h2>
-
-            <div class="protection-grid">
-
-                <div class="protection-item">
-                    <span>🔐</span>
-                    <div>
-                        <strong>Password Hashing</strong>
-                        <p>Passwords are hashed before storage.</p>
-                    </div>
-                </div>
-
-                <div class="protection-item">
-                    <span>🚫</span>
-                    <div>
-                        <strong>Generic Errors</strong>
-                        <p>Generic authentication errors are shown to users.</p>
-                    </div>
-                </div>
-
-                <div class="protection-item">
-                    <span>📋</span>
-                    <div>
-                        <strong>Server-side Logging</strong>
-                        <p>Database exceptions are logged server-side.</p>
-                    </div>
-                </div>
-
-                <div class="protection-item">
-                    <span>🔒</span>
-                    <div>
-                        <strong>Environment Protection</strong>
-                        <p><code>.env</code> is excluded from Git.</p>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-</section>
-
+<section class="demo-hero section"><div><span class="eyebrow">CONTROLLED SECURITY LAB</span><h1>See how SQL Injection<br><span>gets stopped.</span></h1><p class="hero-text">This page demonstrates the secure pattern used by the application. The test input is treated strictly as data and is never executed as SQL.</p></div><div class="lab-badge"><b>DEFENSE</b><span>PARAMETERIZED SQL</span></div></section>
+<section class="section"><div class="code-grid"><article class="code-card danger"><div class="code-head"><span class="red-dot"></span><b>UNSAFE PATTERN</b><span class="danger-label">VULNERABLE</span></div><pre><code>query = "SELECT * FROM users "
+       + "WHERE username = '" + input + "'"</code></pre><p>Raw input changes the SQL statement itself. This can create an injection path.</p></article><article class="code-card safe"><div class="code-head"><span class="green-dot"></span><b>SECURE PATTERN</b><span class="safe-label">PROTECTED</span></div><pre><code>cursor.execute(
+  "SELECT ... WHERE username = %s",
+  (input,)
+)</code></pre><p>The database receives the SQL structure and the user value separately.</p></article></div></section>
+<section class="section section-dark"><div class="section-head"><div><span class="eyebrow">TRY IT SAFELY</span><h2>Send a harmless test string.</h2></div><p>The backend performs only a parameterized COUNT query against your own local/cloud database.</p></div>
+<form method="post" action="{{ url_for('security_demo_test') }}" class="lab-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input name="sample" value="{{ test_value or "' OR '1'='1" }}" maxlength="120"><button class="btn primary" type="submit">Run safe test →</button></form>
+{% if test_value is defined %}<div class="result-box"><span class="result-icon">✓</span><div><b>Parameterized query completed</b><small>Input: <code>{{ test_value }}</code> · Matching users: {{ test_result }}</small></div></div>{% endif %}</section>
+<section class="section"><div class="section-head"><div><span class="eyebrow">DOUBLE-LAYER SECURITY</span><h2>SQL protection + data encryption.</h2></div></div><div class="layer-grid"><div><span>01</span><h3>Query Layer</h3><p>Parameterized SQL prevents attacker-controlled input from becoming executable SQL.</p></div><div><span>02</span><h3>Data Layer</h3><p>AES-256-GCM encrypts sensitive profile values before they are stored in MySQL.</p></div><div><span>03</span><h3>Access Layer</h3><p>Password hashes, CSRF protection, throttling and secure headers reduce application attack surface.</p></div></div></section>
 {% endblock %}

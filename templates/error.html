@@ -1,9 +1,3 @@
-{% extends "base.html" %}
-{% block title %}Error {{ code }}{% endblock %}
-{% block content %}
-<div class="form-card">
-    <h1>Error {{ code }}</h1>
-    <p>{{ message }}</p>
-    <a class="button" href="{{ url_for('index') }}">Back Home</a>
-</div>
-{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ code }} · CipherShield{% endblock %}
+{% block content %}<section class="error-page"><div class="error-code">{{ code }}</div><h1>Security boundary reached.</h1><p>{{ message }}</p><a class="btn primary" href="{{ url_for('index') }}">Return home →</a></section>{% endblock %}

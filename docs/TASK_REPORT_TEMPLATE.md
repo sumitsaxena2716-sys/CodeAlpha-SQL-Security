@@ -1,50 +1,40 @@
-# CodeAlpha Internship - Task 2
-## SQL Injection & Data Leak Prevention
+# CodeAlpha Task 2 — Project Report
 
-**Name:** Sumit Saxena  
-**Student ID:** CA/DF1/307534  
-**Role:** Cloud Computing Intern  
-**Project:** SQL Injection & Data Leak Prevention
+## Project Title
+**CipherShield — Detecting Data Leaks Using SQL Injection**
 
-### 1. Objective
-Develop a local web application that demonstrates how SQL Injection can occur and how parameterized SQL queries prevent it.
+## Objective
+Build a cloud-ready web system that protects user data from SQL Injection and adds encryption and layered security controls.
 
-### 2. Technologies
+## Technology Stack
 - Python
 - Flask
-- MySQL
-- mysql-connector-python
-- HTML/CSS
+- MySQL / AWS RDS
+- AWS EC2
+- AES-256-GCM
+- HTML5 / CSS3
 - Werkzeug password hashing
 
-### 3. Implemented Security Controls
-- Parameterized SQL queries
-- Password hashing
-- Session-based authentication
-- Generic error messages
-- Server-side security logging
-- `.env` credential separation
-- Git ignore for secrets
+## Core Modules
+1. Secure registration and login
+2. Parameterized SQL data access
+3. AES-256-GCM sensitive-data encryption
+4. CSRF protection
+5. Login throttling
+6. Security event logging
+7. SQL Injection educational lab
+8. Cloud deployment architecture
 
-### 4. Testing Checklist
-- [ ] MySQL connection successful
-- [ ] Registration successful
-- [ ] Password stored as a hash
-- [ ] Login with correct credentials succeeds
-- [ ] Login with incorrect credentials fails
-- [ ] SQL Injection explanation page reviewed
-- [ ] `.env` excluded from Git
-- [ ] Security log generated
+## Testing Evidence
+Record screenshots for:
+- Registration
+- Login
+- Dashboard
+- MySQL encrypted values
+- Security Lab test
+- Security Center
+- AWS EC2 public application
+- AWS RDS configuration/security group
 
-### 5. Screenshots to Add
-1. MySQL database/table
-2. Registration page
-3. Successful registration
-4. Login page
-5. Dashboard
-6. SQL Injection prevention page
-7. `security.log`
-8. GitHub repository (without `.env`)
-
-### 6. Conclusion
-The project demonstrates a secure authentication workflow and explains why parameterized SQL queries are preferred over string-concatenated SQL statements.
+## Result
+The application demonstrates layered protection against SQL Injection and data exposure while providing a cloud-ready deployment path.
