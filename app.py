@@ -20,8 +20,19 @@ LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
 app = Flask(__name__)
+_configured_secret = os.getenv("FLASK_SECRET_KEY", "").strip()
+_is_production = os.getenv("APP_ENV", os.getenv("FLASK_ENV", "development")).lower() == "production"
+if _configured_secret == "replace-with-a-long-random-secret":
+    _configured_secret = ""
+if _is_production and not _configured_secret:
+    raise RuntimeError("Set a strong FLASK_SECRET_KEY before production deployment.")
+if not _configured_secret:
+    _configured_secret = secrets.token_urlsafe(48)
+    _temporary_secret = True
+else:
+    _temporary_secret = False
 app.config.update(
-    SECRET_KEY=os.getenv("FLASK_SECRET_KEY", "dev-only-change-me"),
+    SECRET_KEY=_configured_secret,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=os.getenv("COOKIE_SECURE", "0") == "1",
@@ -32,6 +43,8 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
+if _temporary_secret:
+    logging.warning("FLASK_SECRET_KEY is not configured; using a temporary development key.")
 
 # In-memory login throttling. For multi-instance production deployments,
 # replace this with a shared store such as Redis.
@@ -116,26 +129,35 @@ def login_required(view):
     return wrapped
 
 
+def _login_key(username: str) -> str:
+    """Use one consistent key for login throttling regardless of whitespace/case."""
+    return (username or "").strip().casefold()
+
+
 def is_locked(username: str) -> bool:
-    bucket = LOGIN_BUCKET.get(username)
+    key = _login_key(username)
+    bucket = LOGIN_BUCKET.get(key)
     if not bucket:
         return False
     if bucket["locked_until"] > time.time():
         return True
-    LOGIN_BUCKET.pop(username, None)
+    # Keep the bucket while it is below the limit; only expire a completed lock.
+    if bucket["locked_until"]:
+        LOGIN_BUCKET.pop(key, None)
     return False
 
 
 def record_failed_login(username: str):
-    bucket = LOGIN_BUCKET.setdefault(username, {"attempts": 0, "locked_until": 0})
+    key = _login_key(username)
+    bucket = LOGIN_BUCKET.setdefault(key, {"attempts": 0, "locked_until": 0})
     bucket["attempts"] += 1
     if bucket["attempts"] >= MAX_LOGIN_ATTEMPTS:
         bucket["locked_until"] = time.time() + LOCKOUT_SECONDS
-        logging.warning("Account temporarily rate-limited | username=%s", username)
+        logging.warning("Account temporarily rate-limited | username=%s", key)
 
 
 def clear_login_attempts(username: str):
-    LOGIN_BUCKET.pop(username, None)
+    LOGIN_BUCKET.pop(_login_key(username), None)
 
 
 def record_event(event_type: str, username: str | None, status: str):
@@ -155,7 +177,6 @@ def get_current_user():
     user = fetch_one(
         "SELECT id, username, email, phone_encrypted, security_note_encrypted, created_at FROM users WHERE id = %s",
         (session["user_id"],),
-        dictionary=True,
     )
     if user:
         user["phone"] = decrypt_sensitive(user.get("phone_encrypted"))
@@ -235,7 +256,6 @@ def login():
             user = fetch_one(
                 "SELECT id, username, password_hash FROM users WHERE username = %s",
                 (username,),
-                dictionary=True,
             )
             if user and check_password_hash(user["password_hash"], password):
                 clear_login_attempts(username)
@@ -246,11 +266,17 @@ def login():
                 logging.info("Login success | username=%s | ip=%s", username, request.remote_addr)
                 record_event("LOGIN", username, "SUCCESS")
                 return redirect(url_for("dashboard"))
+            else:
+                record_failed_login(username)
 
-            record_failed_login(username)
-            logging.warning("Login failed | username=%s | ip=%s", username, request.remote_addr)
-            record_event("LOGIN", username, "FAILED")
-            flash("Invalid username or password.", "danger")
+                logging.warning(
+                    "Login failed | username=%s | ip=%s",
+                    username,
+                    request.remote_addr
+                )
+                record_event("LOGIN", username, "FAILED")
+                flash("Invalid username or password.", "danger")
+
         except Exception as exc:
             logging.error("Login database error | reason=%s", exc)
             record_event("LOGIN", username, "ERROR")
@@ -299,7 +325,6 @@ def security_demo():
 def security_center():
     rows = fetch_all(
         "SELECT event_time, event_type, username, status FROM security_events ORDER BY id DESC LIMIT 20",
-        dictionary=True,
     )
     return render_template("security_center.html", events=rows)
 
@@ -315,7 +340,6 @@ def security_demo_test():
         result = fetch_one(
             "SELECT COUNT(*) AS user_count FROM users WHERE username = %s",
             (sample,),
-            dictionary=True,
         )
         return render_template("security_demo.html", test_value=sample, test_result=result["user_count"] if result else 0)
     except Exception as exc:

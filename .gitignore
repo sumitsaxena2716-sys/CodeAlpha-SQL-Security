@@ -1,14 +1,33 @@
+# Python virtual environments
 venv/
 .venv/
+
+# Environment variables and secrets
 .env
 .env.*
+!.env.example
+
+# Python cache and compiled files
 __pycache__/
 *.py[cod]
-logs/*.log
-.git/
+
+# Logs
+logs/
+*.log
+
+# Local development
 .vscode/
 .DS_Store
 Thumbs.db
 
-# Project archive
-CodeAlpha_SQL_Security_Task2_Final.zip
+# Git
+.git/
+
+# Test and coverage artifacts
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Local temporary files
+*.tmp
+*.bak
