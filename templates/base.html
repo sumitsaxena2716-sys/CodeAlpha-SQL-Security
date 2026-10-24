@@ -3,13 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="{% block meta_description %}CipherShield is an educational Flask security project demonstrating parameterized SQL, authenticated encryption, and safer authentication practices.{% endblock %}">
+  <meta name="robots" content="{% block robots_directive %}index,follow,max-image-preview:large{% endblock %}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CipherShield">
+  <meta name="twitter:card" content="summary">
+  {% if app_base_url %}<meta property="og:url" content="{{ app_base_url }}{{ request.path }}">{% endif %}
+  <meta property="og:title" content="{% block og_title %}CipherShield — Application Security Lab{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}An educational web application demonstrating SQL injection prevention and data protection controls.{% endblock %}">
+  {% if app_base_url %}<link rel="canonical" href="{{ app_base_url }}{{ request.path }}">{% endif %}
   <title>{% block title %}CipherShield{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <nav class="nav">
-    <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">◈</span><span>Cipher<span>Shield</span></span></a>
-    <div class="nav-links">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <nav class="nav" aria-label="Main navigation">
+    <a class="brand" href="{{ url_for('index') }}" aria-label="CipherShield home"><span class="brand-mark" aria-hidden="true">◈</span><span>Cipher<span>Shield</span></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Open navigation menu"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="primary-navigation">
       <a href="{{ url_for('index') }}">Home</a>
       <a href="{{ url_for('security_demo') }}">Security Lab</a>
       {% if session.get('user_id') %}
@@ -25,10 +38,10 @@
     </div>
   </nav>
 
-  <main>
+  <main id="main-content">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-      <div class="flash-wrap">
+      <div class="flash-wrap" role="status" aria-live="polite">
         {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
       </div>
       {% endif %}
@@ -37,8 +50,9 @@
   </main>
 
   <footer class="footer">
-    <div><strong>CipherShield</strong><span> · CodeAlpha Task 2</span></div>
-    <div>SQL Injection Defense · AES-256 · Secure Authentication</div>
+    <div><strong>CipherShield</strong><span> · Educational security project</span></div>
+    <div class="footer-links"><a href="{{ url_for('privacy') }}">Privacy</a><a href="{{ url_for('terms') }}">Terms</a><span>© {{ current_year }} CipherShield</span></div>
   </footer>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </body>
 </html>
