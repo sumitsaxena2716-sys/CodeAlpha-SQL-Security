@@ -1,3 +1,4 @@
 {% extends 'base.html' %}
+{% block robots_directive %}noindex,nofollow{% endblock %}
 {% block title %}{{ code }} · CipherShield{% endblock %}
 {% block content %}<section class="error-page"><div class="error-code">{{ code }}</div><h1>Security boundary reached.</h1><p>{{ message }}</p><a class="btn primary" href="{{ url_for('index') }}">Return home →</a></section>{% endblock %}
