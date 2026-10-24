@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% block robots_directive %}noindex,nofollow{% endblock %}
+{% block meta_description %}Manage profile fields protected with AES-256-GCM in CipherShield.{% endblock %}
 {% block title %}Encrypted Profile · CipherShield{% endblock %}
 {% block content %}
 <section class="auth-page"><div class="auth-card wide"><div class="auth-badge">✦ ENCRYPTED AT REST</div><h1>Protected profile</h1><p class="muted">These sensitive fields are encrypted with AES-256-GCM before reaching MySQL.</p>
