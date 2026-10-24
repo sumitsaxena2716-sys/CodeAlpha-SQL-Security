@@ -1,6 +1,7 @@
 # Python virtual environments
 venv/
 .venv/
+venv_old/
 
 # Environment variables and secrets
 .env
