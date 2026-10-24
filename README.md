@@ -66,8 +66,12 @@ CodeAlpha_SQL_Security_Task2/
 │   ├── AWS_EC2_RDS_DEPLOYMENT.md
 │   └── TASK_REPORT_TEMPLATE.md
 ├── tests/
+│   ├── test_app_security.py
+│   ├── test_database_config.py
 │   └── test_login_throttle.py
 ├── static/
+│   ├── app.js
+│   ├── favicon.svg
 │   └── style.css
 ├── templates/
 │   ├── base.html
@@ -78,6 +82,8 @@ CodeAlpha_SQL_Security_Task2/
 │   ├── profile.html
 │   ├── security_demo.html
 │   ├── security_center.html
+│   ├── privacy.html
+│   ├── terms.html
 │   └── error.html
 └── logs/
 ```
@@ -217,11 +223,13 @@ The following checks should be performed before submission.
 
 ### Automated tests
 
-Run the included unit tests, if present:
+Run the included unit tests:
 
 ```powershell
-python -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
+
+The test suite mocks database operations for route tests and does not require a live MySQL server. The separate `test_db.py` script does require MySQL to be installed, running, and configured in `.env`.
 
 Record the actual test results before claiming that all tests have passed.
 
@@ -289,6 +297,9 @@ For a public deployment:
 ## 10. Current Limitations
 
 - Login throttling is in-memory and is not suitable for multi-instance production use.
+- Analytics is not configured. Search Console verification requires the site owner's domain/account access.
+- `APP_BASE_URL` must be set to the final HTTPS origin before canonical URLs and the sitemap can be considered production-correct.
+- Privacy and terms pages are project templates, not legal advice; the owner must review them for the real deployment.
 - Local testing does not prove security under internet-facing conditions.
 - The SQL Injection lab demonstrates safe query handling; it is not a substitute for a comprehensive penetration test.
 - AWS deployment remains incomplete until the application is actually deployed and verified in the target environment.
