@@ -1,6 +1,4 @@
 {% extends 'base.html' %}
-{% block robots_directive %}noindex,nofollow{% endblock %}
-{% block meta_description %}View your CipherShield security workspace and account protection controls.{% endblock %}
 {% block title %}Dashboard · CipherShield{% endblock %}
 {% block content %}
 <section class="dashboard-page section"><div class="dash-top"><div><span class="eyebrow">PROTECTED WORKSPACE</span><h1>Hello, {{ user.username }}.</h1><p class="muted">Your account is protected by layered application and data security controls.</p></div><a class="btn ghost" href="{{ url_for('profile') }}">Manage encrypted profile</a></div>
