@@ -1,24 +1,31 @@
-$ErrorActionPreference = 'Stop'
-$Python = '.\.venv\Scripts\python.exe'
+﻿$ErrorActionPreference = 'Stop'
 
-if (!(Test-Path $Python)) {
-    Write-Host 'Creating isolated Python environment (.venv)...'
+$ProjectRoot = $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
+    $ProjectRoot = $PWD.Path
+}
+
+Set-Location $ProjectRoot
+
+$Python = Join-Path $ProjectRoot '.venv\Scripts\python.exe'
+$EnvFile = Join-Path $ProjectRoot '.env'
+$EnvExample = Join-Path $ProjectRoot '.env.example'
+
+if (-not (Test-Path $Python)) {
     python -m venv .venv
+    if ($LASTEXITCODE -ne 0) { throw 'Virtual environment creation failed.' }
 }
 
-& $Python -m pip install --upgrade pip
+if (-not (Test-Path $EnvFile)) {
+    Copy-Item $EnvExample $EnvFile
+    Write-Host 'Created .env. Configure your local settings.'
+}
+
 & $Python -m pip install -r requirements.txt
+if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
 
-if (!(Test-Path '.env')) {
-    Copy-Item '.env.example' '.env'
-    Write-Host ''
-    Write-Host 'Created .env from .env.example.' -ForegroundColor Yellow
-    Write-Host 'Edit .env with your MySQL settings and generated secret keys before starting the app.'
-}
+& $Python -m py_compile app.py database.py generate_key.py
+if ($LASTEXITCODE -ne 0) { throw 'Syntax check failed.' }
 
-& $Python -m compileall -q app.py database.py
-Write-Host ''
-Write-Host 'Python setup and syntax check complete.' -ForegroundColor Green
-Write-Host 'Next: run schema.sql in MySQL, configure .env, then execute:'
-Write-Host '  .\.venv\Scripts\python.exe app.py'
-Write-Host 'This script does not install or start the MySQL server.'
+Write-Host 'Setup and syntax checks passed.' -ForegroundColor Green
+Write-Host 'Start the app with: .\.venv\Scripts\python.exe app.py'
