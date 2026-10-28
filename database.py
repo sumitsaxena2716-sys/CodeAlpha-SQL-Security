@@ -15,7 +15,7 @@ def get_db_connection():
         user=os.getenv("DB_USER", "root"),
         password=os.getenv("DB_PASSWORD", ""),
         database=os.getenv("DB_NAME", "codealpha_security"),
-        # Avoid the native C-extension path, which can crash on some Windows/Python builds.
+        # Avoid native C-extension issues on some Windows/Python builds.
         use_pure=True,
         connection_timeout=5,
     )

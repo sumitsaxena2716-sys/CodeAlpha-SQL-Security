@@ -1,4 +1,4 @@
-import base64
+﻿import base64
 import logging
 import os
 import re
@@ -12,7 +12,14 @@ from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from database import execute, fetch_one, fetch_all, get_cursor, get_db_connection, init_db
+from database import (
+    execute,
+    fetch_one,
+    fetch_all,
+    get_cursor,
+    get_db_connection,
+    init_db,
+)
 
 load_dotenv()
 
@@ -22,11 +29,16 @@ os.makedirs(LOG_DIR, exist_ok=True)
 
 app = Flask(__name__)
 _configured_secret = os.getenv("FLASK_SECRET_KEY", "").strip()
-_is_production = os.getenv("APP_ENV", os.getenv("FLASK_ENV", "development")).lower() == "production"
+_is_production = (
+    os.getenv("APP_ENV", os.getenv("FLASK_ENV", "development")).lower() == "production"
+)
 if _configured_secret == "replace-with-a-long-random-secret":
     _configured_secret = ""
 if _is_production and (not _configured_secret or len(_configured_secret) < 32):
-    raise RuntimeError("Set a unique FLASK_SECRET_KEY with at least 32 characters before production deployment.")
+    raise RuntimeError(
+        "Set a strong FLASK_SECRET_KEY of at least 32 characters "
+        "before production deployment."
+    )
 if not _configured_secret:
     _configured_secret = secrets.token_urlsafe(48)
     _temporary_secret = True
@@ -46,7 +58,9 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
 if _temporary_secret:
-    logging.warning("FLASK_SECRET_KEY is not configured; using a temporary development key.")
+    logging.warning(
+        "FLASK_SECRET_KEY is not configured; using a temporary development key."
+    )
 
 # In-memory login throttling. For multi-instance production deployments,
 # replace this with a shared store such as Redis.
@@ -55,20 +69,30 @@ MAX_LOGIN_ATTEMPTS = int(os.getenv("MAX_LOGIN_ATTEMPTS", "5"))
 LOCKOUT_SECONDS = int(os.getenv("LOCKOUT_SECONDS", "300"))
 
 
+
+
 def _load_aes_key():
     raw = os.getenv("AES_256_KEY", "").strip()
     if not raw:
         return None
+
     try:
-        key = base64.urlsafe_b64decode(raw.encode("utf-8"))
-    except Exception:
+        key = base64.b64decode(
+            raw.encode("ascii"),
+            altchars=b"-_",
+            validate=True,
+        )
+    except (ValueError, UnicodeEncodeError):
         return None
+
     return key if len(key) == 32 else None
 
 
+
+
 AES_KEY = _load_aes_key()
-if _is_production and not AES_KEY:
-    raise RuntimeError("Set a valid AES_256_KEY (32 random bytes, URL-safe base64 encoded) before production deployment.")
+if _is_production and AES_KEY is None:
+    raise RuntimeError("Set a valid AES_256_KEY before production deployment.")
 
 
 def encrypt_sensitive(value: str) -> str:
@@ -104,16 +128,32 @@ app.jinja_env.globals["csrf_token"] = csrf_token
 
 @app.context_processor
 def inject_site_metadata():
-    return {"app_base_url": os.getenv("APP_BASE_URL", "").rstrip("/"), "current_year": datetime.now().year}
+    return {
+        "app_base_url": os.getenv("APP_BASE_URL", "").rstrip("/"),
+        "current_year": datetime.now().year,
+    }
 
 
 @app.before_request
 def protect_post_requests():
     if request.method == "POST":
         supplied = request.form.get("csrf_token", "")
-        if not supplied or not secrets.compare_digest(supplied, session.get("csrf_token", "")):
-            logging.warning("CSRF validation failed | path=%s | ip=%s", request.path, request.remote_addr)
-            return render_template("error.html", code=400, message="Security validation failed. Please refresh and try again."), 400
+        if not supplied or not secrets.compare_digest(
+            supplied, session.get("csrf_token", "")
+        ):
+            logging.warning(
+                "CSRF validation failed | path=%s | ip=%s",
+                request.path,
+                request.remote_addr,
+            )
+            return (
+                render_template(
+                    "error.html",
+                    code=400,
+                    message="Security validation failed. Please refresh and try again.",
+                ),
+                400,
+            )
 
 
 @app.after_request
@@ -122,9 +162,21 @@ def security_headers(response):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; style-src 'self'; font-src 'self'; script-src 'self'; img-src 'self' data:; object-src 'none';"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "base-uri 'self'; "
+        "form-action 'self'; "
+        "frame-ancestors 'none'; "
+        "object-src 'none'; "
+        "script-src 'self'; "
+        "style-src 'self' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data:;"
+    )
     if request.is_secure:
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
     return response
 
 
@@ -135,6 +187,7 @@ def login_required(view):
             flash("Please log in to continue.", "warning")
             return redirect(url_for("login"))
         return view(*args, **kwargs)
+
     return wrapped
 
 
@@ -207,46 +260,102 @@ def register():
         phone = request.form.get("phone", "").strip()
         note = request.form.get("security_note", "").strip()
 
-        if not re.fullmatch(r"[A-Za-z0-9_.-]{3,50}", username):
-            flash("Username must be 3–50 characters and use only letters, numbers, dots, underscores, or hyphens.", "danger")
-            return render_template("register.html")
-        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email) or len(email) > 150:
+        # Validate username
+
+        if phone and not re.fullmatch(r"\+?[0-9 ()-]{7,20}", phone):
+            flash(
+                "Enter a valid phone number with 7â€“20 characters.",
+                "danger",
+            )
+            return render_template("profile.html", user=user), 400
+
+
+        # Validate email
+        if (
+            len(email) > 150
+            or not re.fullmatch(
+                r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+                r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+",
+                email,
+            )
+        ):
             flash("Enter a valid email address.", "danger")
             return render_template("register.html")
-        if len(password) < 8:
-            flash("Password must contain at least 8 characters.", "danger")
+
+        # Validate password length
+        if not 8 <= len(password) <= 128:
+            flash("Password must contain 8â€“128 characters.", "danger")
             return render_template("register.html")
-        if phone and not re.fullmatch(r"\+?[0-9 ]{7,20}", phone):
-            flash("Enter a phone number with 7–20 digits, spaces, and an optional leading +.", "danger")
+
+        # Validate security note length
+        if len(note) > 500:
+            flash("Security note must be 500 characters or fewer.", "danger")
             return render_template("register.html")
+
+        # Validate phone number
+        if phone and not re.fullmatch(r"\+?[0-9 ()-]{7,20}", phone):
+            flash(
+                "Enter a valid phone number with 7â€“20 characters.",
+                "danger",
+            )
+            return render_template("register.html")
+
+        # Require AES encryption configuration
         if not AES_KEY:
-            flash("AES-256 encryption is not configured. Set AES_256_KEY in .env first.", "danger")
+            flash(
+                "AES-256 encryption is not configured. "
+                "Set AES_256_KEY in .env first.",
+                "danger",
+            )
             return render_template("register.html")
 
         try:
             password_hash = generate_password_hash(password)
             phone_encrypted = encrypt_sensitive(phone)
             note_encrypted = encrypt_sensitive(note)
+
             with get_cursor() as (connection, cursor):
                 cursor.execute(
                     """
-                    INSERT INTO users (username, email, password_hash, phone_encrypted, security_note_encrypted)
+                    INSERT INTO users (
+                        username,
+                        email,
+                        password_hash,
+                        phone_encrypted,
+                        security_note_encrypted
+                    )
                     VALUES (%s, %s, %s, %s, %s)
                     """,
-                    (username, email, password_hash, phone_encrypted, note_encrypted),
+                    (
+                        username,
+                        email,
+                        password_hash,
+                        phone_encrypted,
+                        note_encrypted,
+                    ),
                 )
                 connection.commit()
-            logging.info("Registration success | username=%s | ip=%s", username, request.remote_addr)
+
+            logging.info(
+                "Registration success | username=%s | ip=%s",
+                username,
+                request.remote_addr,
+            )
             record_event("REGISTRATION", username, "SUCCESS")
             flash("Account created securely. You can now sign in.", "success")
             return redirect(url_for("login"))
-        except Exception as exc:
-            logging.warning("Registration failed | username=%s | reason=%s", username, exc)
+
+        except Exception:
+            logging.exception(
+                "Registration failed | username=%s", username
+            )
             record_event("REGISTRATION", username, "FAILED")
-            flash("Registration failed. Username or email may already exist.", "danger")
+            flash(
+                "Registration failed. Username or email may already exist.",
+                "danger",
+            )
 
     return render_template("register.html")
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -269,16 +378,16 @@ def login():
                 session["user_id"] = user["id"]
                 session["username"] = user["username"]
                 session["csrf_token"] = secrets.token_urlsafe(32)
-                logging.info("Login success | username=%s | ip=%s", username, request.remote_addr)
+                logging.info(
+                    "Login success | username=%s | ip=%s", username, request.remote_addr
+                )
                 record_event("LOGIN", username, "SUCCESS")
                 return redirect(url_for("dashboard"))
             else:
                 record_failed_login(username)
 
                 logging.warning(
-                    "Login failed | username=%s | ip=%s",
-                    username,
-                    request.remote_addr
+                    "Login failed | username=%s | ip=%s", username, request.remote_addr
                 )
                 record_event("LOGIN", username, "FAILED")
                 flash("Invalid username or password.", "danger")
@@ -306,7 +415,10 @@ def profile():
         phone = request.form.get("phone", "").strip()
         note = request.form.get("security_note", "").strip()
         if phone and not re.fullmatch(r"\+?[0-9 ]{7,20}", phone):
-            flash("Enter a phone number with 7–20 digits, spaces, and an optional leading +.", "danger")
+            flash(
+                "Enter a phone number with 7â€“20 digits, spaces, and an optional leading +.",
+                "danger",
+            )
             return render_template("profile.html", user=user), 400
         if len(note) > 500:
             flash("Private security note must be 500 characters or fewer.", "danger")
@@ -317,12 +429,17 @@ def profile():
                 (encrypt_sensitive(phone), encrypt_sensitive(note), session["user_id"]),
                 commit=True,
             )
-            logging.info("Encrypted profile updated | username=%s", session.get("username"))
+            logging.info(
+                "Encrypted profile updated | username=%s", session.get("username")
+            )
             record_event("PROFILE_ENCRYPTED_UPDATE", session.get("username"), "SUCCESS")
-            flash("Sensitive profile fields were encrypted with AES-256-GCM and saved.", "success")
+            flash(
+                "Sensitive profile fields were encrypted with AES-256-GCM and saved.",
+                "success",
+            )
             return redirect(url_for("profile"))
-        except Exception as exc:
-            logging.error("Profile update failed | reason=%s", exc)
+        except Exception:
+            logging.exception("Profile update failed")
             flash("Profile could not be updated.", "danger")
     return render_template("profile.html", user=user)
 
@@ -335,7 +452,7 @@ def security_demo():
 @app.route("/security-center")
 @login_required
 def security_center():
-    # Show only this signed-in account’s events; never expose other users’ activity.
+    # Show only this signed-in accountâ€™s events; never expose other usersâ€™ activity.
     rows = fetch_all(
         "SELECT event_time, event_type, username, status FROM security_events WHERE username = %s ORDER BY id DESC LIMIT 20",
         (session.get("username"),),
@@ -355,10 +472,17 @@ def security_demo_test():
             "SELECT COUNT(*) AS user_count FROM users WHERE username = %s",
             (sample,),
         )
-        return render_template("security_demo.html", test_value=sample, test_result=result["user_count"] if result else 0)
+        return render_template(
+            "security_demo.html",
+            test_value=sample,
+            test_result=result["user_count"] if result else 0,
+        )
     except Exception:
         logging.exception("Security demo test failed")
-        return render_template("security_demo.html", test_value=sample, test_error=True), 503
+        return (
+            render_template("security_demo.html", test_value=sample, test_error=True),
+            503,
+        )
 
 
 @app.route("/logout", methods=["POST"])
@@ -385,6 +509,7 @@ def terms():
 @app.route("/robots.txt")
 def robots_txt():
     from flask import Response
+
     base = os.getenv("APP_BASE_URL", "").rstrip("/")
     body = "User-agent: *\nAllow: /\nDisallow: /dashboard\nDisallow: /profile\nDisallow: /security-center\nDisallow: /login\nDisallow: /register\nDisallow: /logout\n"
     if base:
@@ -395,29 +520,58 @@ def robots_txt():
 @app.route("/sitemap.xml")
 def sitemap_xml():
     from flask import Response
+
     base = os.getenv("APP_BASE_URL", "").rstrip("/")
     if not base:
-        return Response("APP_BASE_URL is not configured; sitemap is unavailable.\n", status=503, mimetype="text/plain")
+        return Response(
+            "APP_BASE_URL is not configured; sitemap is unavailable.\n",
+            status=503,
+            mimetype="text/plain",
+        )
     urls = ["/", "/security-demo", "/privacy", "/terms"]
     entries = "".join(f"<url><loc>{base}{path}</loc></url>" for path in urls)
-    xml = '<?xml version="1.0" encoding="UTF-8"?>' + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + entries + '</urlset>'
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        + entries
+        + "</urlset>"
+    )
     return Response(xml, mimetype="application/xml")
 
 
 @app.errorhandler(404)
 def not_found(_error):
-    return render_template("error.html", code=404, message="The requested page could not be found."), 404
+    return (
+        render_template(
+            "error.html", code=404, message="The requested page could not be found."
+        ),
+        404,
+    )
 
 
 @app.errorhandler(413)
 def request_too_large(_error):
-    return render_template("error.html", code=413, message="The submitted request is too large. Reduce the form input and try again."), 413
+    return (
+        render_template(
+            "error.html",
+            code=413,
+            message="The submitted request is too large. Reduce the form input and try again.",
+        ),
+        413,
+    )
 
 
 @app.errorhandler(500)
 def server_error(_error):
     logging.exception("Unhandled server error")
-    return render_template("error.html", code=500, message="An internal error occurred. No sensitive details were exposed."), 500
+    return (
+        render_template(
+            "error.html",
+            code=500,
+            message="An internal error occurred. No sensitive details were exposed.",
+        ),
+        500,
+    )
 
 
 if __name__ == "__main__":
@@ -426,5 +580,11 @@ if __name__ == "__main__":
             init_db()
         except Exception:
             logging.exception("Database initialization failed")
-            raise SystemExit("Database initialization failed. Check MySQL service and .env settings; see logs/security.log for details.")
-    app.run(host=os.getenv("FLASK_HOST", "127.0.0.1"), port=int(os.getenv("FLASK_PORT", "5000")), debug=False)
+            raise SystemExit(
+                "Database initialization failed. Check MySQL service and .env settings; see logs/security.log for details."
+            )
+    app.run(
+        host=os.getenv("FLASK_HOST", "127.0.0.1"),
+        port=int(os.getenv("FLASK_PORT", "5000")),
+        debug=False,
+    )
