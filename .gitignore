@@ -1,7 +1,6 @@
 # Python virtual environments
 venv/
 .venv/
-venv_old/
 
 # Environment variables and secrets
 .env
@@ -32,3 +31,8 @@ htmlcov/
 # Local temporary files
 *.tmp
 *.bak
+# Old local virtual environment
+venv_old/
+
+# Temporary Python 3.12 environment
+.venv312/
