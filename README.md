@@ -51,38 +51,37 @@ Security features should be considered verified only after the corresponding tes
 ## 4. Project Structure
 
 ```text
-CodeAlpha_SQL_Security_Task2/
+CipherShield/
 ├── app.py
 ├── database.py
 ├── schema.sql
-├── requirements.txt
-├── .env.example
-├── .gitignore
-├── generate_key.py
 ├── test_db.py
+├── requirements.txt
+├── requirements-dev.txt
+├── requirements-dev-lock.txt
 ├── README.md
-├── docs/
-│   ├── CODEALPHA_TASK_MAPPING.md
-│   ├── AWS_EC2_RDS_DEPLOYMENT.md
-│   └── TASK_REPORT_TEMPLATE.md
-├── tests/
-│   └── test_login_throttle.py
+├── SONARCLOUD_FIX_NOTES.md
 ├── static/
+│   ├── app.js
+│   ├── favicon.svg
 │   └── style.css
 ├── templates/
 │   ├── base.html
+│   ├── dashboard.html
+│   ├── error.html
 │   ├── index.html
 │   ├── login.html
-│   ├── register.html
-│   ├── dashboard.html
+│   ├── privacy.html
 │   ├── profile.html
-│   ├── security_demo.html
+│   ├── register.html
 │   ├── security_center.html
-│   └── error.html
-└── logs/
+│   ├── security_demo.html
+│   └── terms.html
+└── tests/
+    ├── test_app_security.py
+    ├── test_database_config.py
+    └── test_login_throttle.py
 ```
-
-*Note: This is the documented structure. Confirm that each listed file and directory exists in your final project folder.*
 
 ## 5. Local Setup
 
@@ -197,35 +196,101 @@ Use dummy accounts and test data during demonstrations.
 
 ## 7. Testing and Verification
 
-The following checks should be performed before submission.
+### Automated Test Suite
 
-| Test | Expected result |
-|---|---|
-| Database connection | Application connects to the configured database |
-| Registration | Valid test account is created |
-| Password storage | Password is stored as a hash, not plaintext |
-| Valid login | Correct credentials allow access |
-| Invalid login | Incorrect credentials are rejected |
-| Login throttling | Repeated failures trigger the configured temporary lockout |
-| Lockout expiry | Login becomes available after the configured duration |
-| SQL injection test | Test input does not bypass authentication or expose unauthorized records |
-| Profile encryption | Supported sensitive fields are stored as ciphertext |
-| Profile decryption | Authorized application flow retrieves the correct original value |
-| CSRF protection | Applicable state-changing requests without valid CSRF protection are rejected |
-| Security event logging | Relevant successful and failed events are recorded |
-| Session protection | Logout prevents subsequent access to protected pages |
+The project includes automated security and database tests using Python's `unittest` and `pytest` frameworks.
 
-### Automated tests
+Run the complete test suite:
 
-Run the included unit tests, if present:
+```powershell
+python -m pytest -v
+```
+
+Run tests using the same command configured in GitHub Actions:
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
-Record the actual test results before claiming that all tests have passed.
+### Code Coverage
 
-A passing unit test suite does not replace end-to-end testing, database testing, or a security review.
+Generate a code coverage report:
+
+```powershell
+python -m pytest --cov=app --cov=database --cov-report=term-missing
+```
+
+Latest verified coverage:
+
+| Module | Coverage |
+|---|---:|
+| app.py | 95% |
+| database.py | 100% |
+| **Overall** | **96%** |
+
+### Static and Dependency Security Checks
+
+Run Python compilation:
+
+```powershell
+python -m compileall -q app.py database.py tests
+```
+
+Audit production dependencies:
+
+```powershell
+python -m pip_audit -r requirements.txt
+```
+
+Check Git whitespace errors:
+
+```powershell
+git diff --check
+```
+
+### Hash-Verified Dependency Installation
+
+Install production dependencies:
+
+```powershell
+python -m pip install --only-binary=:all: --require-hashes -r requirements-lock.txt
+```
+
+Install development dependencies:
+
+```powershell
+python -m pip install --only-binary=:all: --require-hashes -r requirements-dev-lock.txt
+```
+
+### Verified Test Execution Record
+
+The following results have been verified in the local development environment:
+
+| Check | Verified Result |
+|---|---|
+| Automated tests | 62 passed, 0 failed |
+| Python 3.12.10 compatibility | 62 tests passed |
+| Python 3.13.17 compatibility | 62 tests passed |
+| Overall code coverage | 96% |
+| Database module coverage | 100% |
+| Python compilation | Passed |
+| Dependency vulnerability audit | No known vulnerabilities found |
+| Hash-verified dependency installation | Passed |
+| Git whitespace check | No whitespace errors |
+| SonarCloud analysis / Quality Gate | Pending fresh scan |
+
+### Continuous Integration
+
+GitHub Actions is configured to run on pushes and pull requests targeting the `main` branch.
+
+The workflow:
+- Uses Python 3.12.
+- Installs dependencies using hash-verified lock files.
+- Runs the complete test suite using `unittest discover`.
+
+A passing local test suite does not automatically confirm that the remote GitHub Actions workflow or SonarCloud Quality Gate has passed. Verify their actual results after pushing the changes.
+
+A passing unit test suite also does not replace end-to-end testing, database testing, or an independent security review.
 
 ## 8. Security Considerations
 
