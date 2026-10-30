@@ -1,11 +1,54 @@
-{% extends 'base.html' %}
-{% block title %}Sign In · CipherShield{% endblock %}
-{% block content %}
-<section class="auth-page"><div class="auth-card"><div class="auth-badge">◈ SECURE ACCESS</div><h1>Welcome back</h1><p class="muted">Sign in to open your protected security workspace.</p>
-<form method="post" class="auth-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-<label>Username<div class="input-wrap"><span>⌁</span><input name="username" autocomplete="username" required placeholder="e.g. sumit_test"></div></label>
-<label>Password<div class="input-wrap"><span>◉</span><input type="password" name="password" autocomplete="current-password" required placeholder="Your password"></div></label>
-<button class="btn primary full" type="submit">Secure sign in <span>→</span></button></form>
-<div class="security-note"><span>✓</span><div><b>Protected authentication</b><small>Passwords are verified against secure hashes. Failed attempts are throttled.</small></div></div>
-<p class="auth-bottom">Don't have an account? <a href="{{ url_for('register') }}">Create one</a></p></div></section>
+{% extends 'base.html' %} {% block robots_directive %}noindex,nofollow{%
+endblock %} {% block meta_description %}Sign in to the CipherShield educational
+application security workspace.{% endblock %} {% block title %}Sign In ·
+CipherShield{% endblock %} {% block content %}
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="auth-badge">◈ SECURE ACCESS</div>
+    <h1>Welcome back</h1>
+    <p class="muted">Sign in to open your protected security workspace.</p>
+    <form method="post" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <label
+        >Username
+        <div class="input-wrap">
+          <span>⌁</span
+          ><input
+            name="username"
+            autocomplete="username"
+            required
+            placeholder="e.g. sumit_test"
+          /></div
+      ></label>
+      <label
+        >Password
+        <div class="input-wrap">
+          <span>◉</span
+          ><input
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            required
+            placeholder="Your password"
+          /></div
+      ></label>
+      <button class="btn primary full" type="submit">
+        Secure sign in <span>→</span>
+      </button>
+    </form>
+    <div class="security-note">
+      <span>✓</span>
+      <div>
+        <b>Protected authentication</b
+        ><small
+          >Passwords are verified against secure hashes. Failed attempts are
+          throttled.</small
+        >
+      </div>
+    </div>
+    <p class="auth-bottom">
+      Don't have an account? <a href="{{ url_for('register') }}">Create one</a>
+    </p>
+  </div>
+</section>
 {% endblock %}
