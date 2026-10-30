@@ -9,7 +9,16 @@ from functools import wraps
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    flash,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import (
@@ -24,6 +33,10 @@ from database import (
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ERROR_TEMPLATE = "error.html"
+PROFILE_TEMPLATE = "profile.html"
+REGISTER_TEMPLATE = "register.html"
+SECURITY_DEMO_TEMPLATE = "security_demo.html"
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
@@ -69,8 +82,6 @@ MAX_LOGIN_ATTEMPTS = int(os.getenv("MAX_LOGIN_ATTEMPTS", "5"))
 LOCKOUT_SECONDS = int(os.getenv("LOCKOUT_SECONDS", "300"))
 
 
-
-
 def _load_aes_key():
     raw = os.getenv("AES_256_KEY", "").strip()
     if not raw:
@@ -82,12 +93,10 @@ def _load_aes_key():
             altchars=b"-_",
             validate=True,
         )
-    except (ValueError, UnicodeEncodeError):
+    except ValueError:
         return None
 
     return key if len(key) == 32 else None
-
-
 
 
 AES_KEY = _load_aes_key()
@@ -136,6 +145,10 @@ def inject_site_metadata():
 
 @app.before_request
 def protect_post_requests():
+    # Let Flask return 404/405 for invalid routes or unsupported methods.
+    if request.routing_exception is not None:
+        return None
+
     if request.method == "POST":
         supplied = request.form.get("csrf_token", "")
         if not supplied or not secrets.compare_digest(
@@ -146,14 +159,15 @@ def protect_post_requests():
                 request.path,
                 request.remote_addr,
             )
-            return (
+            response = make_response(
                 render_template(
-                    "error.html",
+                    ERROR_TEMPLATE,
                     code=400,
                     message="Security validation failed. Please refresh and try again.",
-                ),
-                400,
+                )
             )
+            response.status_code = 400
+            return response
 
 
 @app.after_request
@@ -229,8 +243,8 @@ def record_event(event_type: str, username: str | None, status: str):
             (event_type, username, status),
             commit=True,
         )
-    except Exception as exc:
-        logging.error("Security event write failed | reason=%s", exc)
+    except Exception:
+        logging.exception("Security event write failed")
 
 
 def get_current_user():
@@ -246,9 +260,25 @@ def get_current_user():
     return user
 
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def index():
     return render_template("index.html", user=get_current_user())
+
+
+def _registration_validation_error(email: str, password: str, phone: str, note: str):
+    """Return the first registration validation message, or None when valid."""
+    if len(email) > 150 or not re.fullmatch(
+        r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@" r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+",
+        email,
+    ):
+        return "Enter a valid email address."
+    if not 8 <= len(password) <= 128:
+        return "Password must contain 8â€“128 characters."
+    if len(note) > 500:
+        return "Security note must be 500 characters or fewer."
+    if phone and not re.fullmatch(r"\+?[0-9 ()-]{7,20}", phone):
+        return "Enter a valid phone number with 7â€“20 characters."
+    return None
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -260,45 +290,10 @@ def register():
         phone = request.form.get("phone", "").strip()
         note = request.form.get("security_note", "").strip()
 
-        # Validate username
-
-        if phone and not re.fullmatch(r"\+?[0-9 ()-]{7,20}", phone):
-            flash(
-                "Enter a valid phone number with 7â€“20 characters.",
-                "danger",
-            )
-            return render_template("profile.html", user=user), 400
-
-
-        # Validate email
-        if (
-            len(email) > 150
-            or not re.fullmatch(
-                r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
-                r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+",
-                email,
-            )
-        ):
-            flash("Enter a valid email address.", "danger")
-            return render_template("register.html")
-
-        # Validate password length
-        if not 8 <= len(password) <= 128:
-            flash("Password must contain 8â€“128 characters.", "danger")
-            return render_template("register.html")
-
-        # Validate security note length
-        if len(note) > 500:
-            flash("Security note must be 500 characters or fewer.", "danger")
-            return render_template("register.html")
-
-        # Validate phone number
-        if phone and not re.fullmatch(r"\+?[0-9 ()-]{7,20}", phone):
-            flash(
-                "Enter a valid phone number with 7â€“20 characters.",
-                "danger",
-            )
-            return render_template("register.html")
+        validation_error = _registration_validation_error(email, password, phone, note)
+        if validation_error:
+            flash(validation_error, "danger")
+            return render_template(REGISTER_TEMPLATE), 400
 
         # Require AES encryption configuration
         if not AES_KEY:
@@ -307,7 +302,7 @@ def register():
                 "Set AES_256_KEY in .env first.",
                 "danger",
             )
-            return render_template("register.html")
+            return render_template(REGISTER_TEMPLATE)
 
         try:
             password_hash = generate_password_hash(password)
@@ -346,16 +341,15 @@ def register():
             return redirect(url_for("login"))
 
         except Exception:
-            logging.exception(
-                "Registration failed | username=%s", username
-            )
+            logging.exception("Registration failed | username=%s", username)
             record_event("REGISTRATION", username, "FAILED")
             flash(
                 "Registration failed. Username or email may already exist.",
                 "danger",
             )
 
-    return render_template("register.html")
+    return render_template(REGISTER_TEMPLATE)
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -392,15 +386,15 @@ def login():
                 record_event("LOGIN", username, "FAILED")
                 flash("Invalid username or password.", "danger")
 
-        except Exception as exc:
-            logging.error("Login database error | reason=%s", exc)
+        except Exception:
+            logging.exception("Login database error")
             record_event("LOGIN", username, "ERROR")
             flash("Unable to process login right now.", "danger")
 
     return render_template("login.html")
 
 
-@app.route("/dashboard")
+@app.route("/dashboard", methods=["GET"])
 @login_required
 def dashboard():
     user = get_current_user()
@@ -419,10 +413,10 @@ def profile():
                 "Enter a phone number with 7â€“20 digits, spaces, and an optional leading +.",
                 "danger",
             )
-            return render_template("profile.html", user=user), 400
+            return render_template(PROFILE_TEMPLATE, user=user), 400
         if len(note) > 500:
             flash("Private security note must be 500 characters or fewer.", "danger")
-            return render_template("profile.html", user=user), 400
+            return render_template(PROFILE_TEMPLATE, user=user), 400
         try:
             execute(
                 "UPDATE users SET phone_encrypted = %s, security_note_encrypted = %s WHERE id = %s",
@@ -441,15 +435,15 @@ def profile():
         except Exception:
             logging.exception("Profile update failed")
             flash("Profile could not be updated.", "danger")
-    return render_template("profile.html", user=user)
+    return render_template(PROFILE_TEMPLATE, user=user)
 
 
-@app.route("/security-demo")
+@app.route("/security-demo", methods=["GET"])
 def security_demo():
-    return render_template("security_demo.html")
+    return render_template(SECURITY_DEMO_TEMPLATE)
 
 
-@app.route("/security-center")
+@app.route("/security-center", methods=["GET"])
 @login_required
 def security_center():
     # Show only this signed-in accountâ€™s events; never expose other usersâ€™ activity.
@@ -473,16 +467,17 @@ def security_demo_test():
             (sample,),
         )
         return render_template(
-            "security_demo.html",
+            SECURITY_DEMO_TEMPLATE,
             test_value=sample,
             test_result=result["user_count"] if result else 0,
         )
     except Exception:
         logging.exception("Security demo test failed")
-        return (
-            render_template("security_demo.html", test_value=sample, test_error=True),
-            503,
+        response = make_response(
+            render_template(SECURITY_DEMO_TEMPLATE, test_value=sample, test_error=True)
         )
+        response.status_code = 503
+        return response
 
 
 @app.route("/logout", methods=["POST"])
@@ -496,17 +491,17 @@ def logout():
     return redirect(url_for("index"))
 
 
-@app.route("/privacy")
+@app.route("/privacy", methods=["GET"])
 def privacy():
     return render_template("privacy.html")
 
 
-@app.route("/terms")
+@app.route("/terms", methods=["GET"])
 def terms():
     return render_template("terms.html")
 
 
-@app.route("/robots.txt")
+@app.route("/robots.txt", methods=["GET"])
 def robots_txt():
     from flask import Response
 
@@ -517,7 +512,7 @@ def robots_txt():
     return Response(body, mimetype="text/plain")
 
 
-@app.route("/sitemap.xml")
+@app.route("/sitemap.xml", methods=["GET"])
 def sitemap_xml():
     from flask import Response
 
@@ -541,37 +536,40 @@ def sitemap_xml():
 
 @app.errorhandler(404)
 def not_found(_error):
-    return (
+    response = make_response(
         render_template(
-            "error.html", code=404, message="The requested page could not be found."
-        ),
-        404,
+            ERROR_TEMPLATE, code=404, message="The requested page could not be found."
+        )
     )
+    response.status_code = 404
+    return response
 
 
 @app.errorhandler(413)
 def request_too_large(_error):
-    return (
+    response = make_response(
         render_template(
-            "error.html",
+            ERROR_TEMPLATE,
             code=413,
             message="The submitted request is too large. Reduce the form input and try again.",
-        ),
-        413,
+        )
     )
+    response.status_code = 413
+    return response
 
 
 @app.errorhandler(500)
 def server_error(_error):
     logging.exception("Unhandled server error")
-    return (
+    response = make_response(
         render_template(
-            "error.html",
+            ERROR_TEMPLATE,
             code=500,
             message="An internal error occurred. No sensitive details were exposed.",
-        ),
-        500,
+        )
     )
+    response.status_code = 500
+    return response
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 """Unit tests for the local, in-memory login throttling helper."""
+
 import unittest
 from unittest.mock import patch
 
@@ -27,7 +28,9 @@ class LoginThrottleTests(unittest.TestCase):
         with patch.object(cipher_app.time, "time", return_value=1000):
             for _ in range(cipher_app.MAX_LOGIN_ATTEMPTS):
                 cipher_app.record_failed_login("testuser")
-        with patch.object(cipher_app.time, "time", return_value=1000 + cipher_app.LOCKOUT_SECONDS + 1):
+        with patch.object(
+            cipher_app.time, "time", return_value=1000 + cipher_app.LOCKOUT_SECONDS + 1
+        ):
             self.assertFalse(cipher_app.is_locked("testuser"))
         self.assertNotIn("testuser", cipher_app.LOGIN_BUCKET)
 
