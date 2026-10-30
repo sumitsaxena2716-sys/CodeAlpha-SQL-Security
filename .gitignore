@@ -31,8 +31,11 @@ htmlcov/
 # Local temporary files
 *.tmp
 *.bak
-# Old local virtual environment
-venv_old/
 
-# Temporary Python 3.12 environment
+# Legacy virtual environment
+venv_old/
+# Additional virtual environments
 .venv312/
+
+# Local database backups
+database.zip

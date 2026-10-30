@@ -1,4 +1,5 @@
-﻿$ErrorActionPreference = 'Stop'
+
+$ErrorActionPreference = 'Stop'
 
 $ProjectRoot = $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
@@ -13,7 +14,6 @@ $EnvExample = Join-Path $ProjectRoot '.env.example'
 
 if (-not (Test-Path $Python)) {
     python -m venv .venv
-    if ($LASTEXITCODE -ne 0) { throw 'Virtual environment creation failed.' }
 }
 
 if (-not (Test-Path $EnvFile)) {
@@ -28,4 +28,4 @@ if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'Syntax check failed.' }
 
 Write-Host 'Setup and syntax checks passed.' -ForegroundColor Green
-Write-Host 'Start the app with: .\.venv\Scripts\python.exe app.py'
+Write-Host 'Start the application with: .\.venv\Scripts\python.exe app.py'
